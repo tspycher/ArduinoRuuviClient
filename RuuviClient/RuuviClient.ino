@@ -7,8 +7,8 @@
 
 #include <ArduinoBLE.h>
 
-float temperature, humidity, pressure;
-bool new_data;
+float temperature, humidity; //, pressure;
+bool new_data = false;
 bool debug = false;
 
 void blePeripheralDiscoveredHandler(BLEDevice central) {
@@ -48,7 +48,7 @@ void blePeripheralDiscoveredHandler(BLEDevice central) {
     // https://github.com/ruuvi/ruuvi-sensor-protocols/blob/master/dataformat_05.md
     temperature = (int)(((byte)value[payload_start] << 8) | ((byte)value[payload_start + 1])) * 0.005; // Celcius
     humidity = (int)(((byte)value[payload_start+2] << 8) | ((byte)value[payload_start + 3])) * 0.0025; // Percent
-    pressure = ((int)(((byte)value[payload_start+4] << 8) | ((byte)value[payload_start + 5])) + 50000) / 100; // hPa
+    //pressure = ((int)(((byte)value[payload_start+4] << 8) | ((byte)value[payload_start + 5])) + 50000) / 100; // hPa
     new_data = true;
   } else {
     Serial.print("Unknown Data Format from RuuviTag received: ");
@@ -63,13 +63,14 @@ void print_data() {
   new_data = false;
   Serial.print("Temperature: ");
   Serial.print(temperature);
-  Serial.print("C, ");
+  Serial.print("C ");
   Serial.print("Humidity: ");
   Serial.print(humidity);
-  Serial.print("%, ");
-  Serial.print("Pressure: ");
-  Serial.print(pressure);
-  Serial.println("hPa");
+  Serial.print("% ");
+  //Serial.print("Pressure: ");
+  //Serial.print(pressure);
+  //Serial.print("hPa");
+  Serial.println();
 }
 
 void setup() {
@@ -80,7 +81,6 @@ void setup() {
     Serial.println("starting Bluetooth® Low Energy module failed!");
     while (1);
   }
-  new_data = false;
   Serial.println("Ruuvi Prototype to listen for Ruuvi Advertisements and Decode data");
   Serial.println("------------------------------------------------------------------");
   BLE.setEventHandler(BLEDiscovered, blePeripheralDiscoveredHandler);
@@ -88,6 +88,6 @@ void setup() {
 }
 
 void loop() {
-  BLE.poll();
+  BLE.poll(200);
   print_data();
 }
