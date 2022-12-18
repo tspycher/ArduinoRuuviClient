@@ -18,6 +18,7 @@ void blePeripheralDiscoveredHandler(BLEDevice central) {
     // Decimal: 4 153
     uint8_t manufacturer[central.manufacturerDataLength()];
     central.manufacturerData(manufacturer, central.manufacturerDataLength());
+    
     if((int)manufacturer[0] == 153 && (int)manufacturer[1] == 4) {
       Serial.print("Discovered event from RuuviTag with Mac: ");
       Serial.println(central.address());
@@ -51,12 +52,6 @@ void blePeripheralDiscoveredHandler(BLEDevice central) {
 
   if (format == 5) { // Data Format 5 Protocol Specification (RAWv2)
     // https://github.com/ruuvi/ruuvi-sensor-protocols/blob/master/dataformat_05.md
-
-    Serial.print(value[payload_start], HEX);
-    Serial.print(" ");
-    Serial.print(value[payload_start+1], HEX);
-    Serial.println();
-
     temperature = (((signed char)value[payload_start] << 8) | ((signed char)value[payload_start + 1])) * 0.005; // Celcius
     humidity = (((signed char)value[payload_start+2] << 8) | ((signed char)value[payload_start + 3])) * 0.0025; // Percent
     new_data = true;
@@ -92,7 +87,7 @@ void setup() {
   Serial.println("------------------------------------------------------------------");
   BLE.setEventHandler(BLEDiscovered, blePeripheralDiscoveredHandler);
   BLE.scan();
-  //BLE.scanForAddress("f2:40:f1:bc:69:e0", true);
+  //BLE.scanForAddress("f2:40:f1:bc:69:e0", true); // this is my ruuvitag. You can limit the scan for explicitly your ruuvitag
 }
 
 void loop() {
