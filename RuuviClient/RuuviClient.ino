@@ -7,9 +7,9 @@
 
 #include <ArduinoBLE.h>
 
-float temperature, humidity; //, pressure;
+float temperature, humidity;
 bool new_data = false;
-bool debug = false;
+bool debug = true;
 
 void blePeripheralDiscoveredHandler(BLEDevice central) {
   if(central.hasManufacturerData() && central.hasAdvertisementData()) {
@@ -32,6 +32,11 @@ void blePeripheralDiscoveredHandler(BLEDevice central) {
     }
   } else {
     // no manufacturer Data available
+    if(debug) {
+      Serial.print("Discovered Device with mac: ");
+      Serial.print(central.address());
+      Serial.println(" but does no advertised data or manufacturer data");
+    }
     return;
   }
 
@@ -46,9 +51,14 @@ void blePeripheralDiscoveredHandler(BLEDevice central) {
 
   if (format == 5) { // Data Format 5 Protocol Specification (RAWv2)
     // https://github.com/ruuvi/ruuvi-sensor-protocols/blob/master/dataformat_05.md
-    temperature = (int)(((byte)value[payload_start] << 8) | ((byte)value[payload_start + 1])) * 0.005; // Celcius
-    humidity = (int)(((byte)value[payload_start+2] << 8) | ((byte)value[payload_start + 3])) * 0.0025; // Percent
-    //pressure = ((int)(((byte)value[payload_start+4] << 8) | ((byte)value[payload_start + 5])) + 50000) / 100; // hPa
+
+    Serial.print(value[payload_start], HEX);
+    Serial.print(" ");
+    Serial.print(value[payload_start+1], HEX);
+    Serial.println();
+
+    temperature = (((signed char)value[payload_start] << 8) | ((signed char)value[payload_start + 1])) * 0.005; // Celcius
+    humidity = (((signed char)value[payload_start+2] << 8) | ((signed char)value[payload_start + 3])) * 0.0025; // Percent
     new_data = true;
   } else {
     Serial.print("Unknown Data Format from RuuviTag received: ");
@@ -67,9 +77,6 @@ void print_data() {
   Serial.print("Humidity: ");
   Serial.print(humidity);
   Serial.print("% ");
-  //Serial.print("Pressure: ");
-  //Serial.print(pressure);
-  //Serial.print("hPa");
   Serial.println();
 }
 
@@ -85,9 +92,10 @@ void setup() {
   Serial.println("------------------------------------------------------------------");
   BLE.setEventHandler(BLEDiscovered, blePeripheralDiscoveredHandler);
   BLE.scan();
+  //BLE.scanForAddress("f2:40:f1:bc:69:e0", true);
 }
 
 void loop() {
-  BLE.poll(200);
+  BLE.poll();
   print_data();
 }
