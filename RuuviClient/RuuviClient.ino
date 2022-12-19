@@ -52,8 +52,12 @@ void blePeripheralDiscoveredHandler(BLEDevice central) {
 
   if (format == 5) { // Data Format 5 Protocol Specification (RAWv2)
     // https://github.com/ruuvi/ruuvi-sensor-protocols/blob/master/dataformat_05.md
-    temperature = (((signed char)value[payload_start] << 8) | ((signed char)value[payload_start + 1])) * 0.005; // Celcius
-    humidity = (((signed char)value[payload_start+2] << 8) | ((signed char)value[payload_start + 3])) * 0.0025; // Percent
+
+    int16_t raw_temperature = (int16_t)value[payload_start]<<8 | (int16_t)value[payload_start+1];
+    int16_t raw_humidity = (int16_t)value[payload_start+2]<<8 | (int16_t)value[payload_start+3];
+  
+    temperature = raw_temperature * 0.005; // Celcius
+    humidity = raw_humidity * 0.0025; // Percent
     new_data = true;
   } else {
     Serial.print("Unknown Data Format from RuuviTag received: ");
